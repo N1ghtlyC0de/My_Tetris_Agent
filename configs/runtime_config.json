@@ -1,0 +1,32 @@
+{
+  "board": {
+    "roi": {
+      "left": 1356,
+      "top": 413,
+      "width": 168,
+      "height": 331
+    }
+  },
+  "next": {
+    "roi1_rel_to_board": {
+      "dx": 180,
+      "dy": 17,
+      "width": 80,
+      "height": 54
+    },
+    "roi2_rel_to_board": {
+      "dx": 185,
+      "dy": 65,
+      "width": 75,
+      "height": 57
+    }
+  },
+  "hold": {
+    "roi_rel_to_board": {
+      "dx": -80,
+      "dy": 16,
+      "width": 82,
+      "height": 51
+    }
+  }
+}
