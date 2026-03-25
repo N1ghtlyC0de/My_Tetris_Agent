@@ -1,32 +1,32 @@
 {
   "board": {
     "roi": {
-      "left": 1356,
-      "top": 413,
-      "width": 168,
-      "height": 331
+      "left": 811,
+      "top": 279,
+      "width": 297,
+      "height": 601
     }
   },
   "next": {
     "roi1_rel_to_board": {
-      "dx": 180,
-      "dy": 17,
-      "width": 80,
-      "height": 54
+      "dx": 324,
+      "dy": 27,
+      "width": 149,
+      "height": 96
     },
     "roi2_rel_to_board": {
-      "dx": 185,
-      "dy": 65,
-      "width": 75,
-      "height": 57
+      "dx": 326,
+      "dy": 120,
+      "width": 147,
+      "height": 90
     }
   },
   "hold": {
     "roi_rel_to_board": {
-      "dx": -80,
-      "dy": 16,
-      "width": 82,
-      "height": 51
+      "dx": -154,
+      "dy": 27,
+      "width": 149,
+      "height": 90
     }
   }
 }
