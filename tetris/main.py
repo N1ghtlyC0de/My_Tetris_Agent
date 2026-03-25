@@ -353,19 +353,24 @@ def choose_piece_for_turn(
 def execute_move_safe(ctrl: Controller, target_rot: int, target_col: int) -> None:
     """
     Stable execution strategy:
-      1) slam left to normalize x-position
-      2) rotate using CW only (repeat target_rot times)
+      1) rotate using CW only at spawn position (before hitting any wall)
+      2) slam left to normalize x-position after rotation
       3) move right to target_col
       4) hard drop
-    """
-    # 1) normalize horizontal position
-    ctrl.move_left(10)
-    time.sleep(0.010)
 
-    # 2) rotation (CW-only for consistency)
+    Rotation must happen before slamming left so that wall-kick offsets
+    (applied when rotating against the left wall) do not corrupt the column
+    reference.  After rotation the slam guarantees the leftmost cell is at
+    column 0, and then moving right target_col steps places it correctly.
+    """
+    # 1) rotation first (CW-only, at spawn where there is room)
     for _ in range(target_rot % 4):
         ctrl.rotate_cw()
         time.sleep(0.008)
+
+    # 2) normalize horizontal position after rotation
+    ctrl.move_left(10)
+    time.sleep(0.010)
 
     # 3) move to desired column from 0
     if target_col > 0:
