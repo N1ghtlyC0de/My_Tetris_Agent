@@ -103,8 +103,9 @@ def score(board, lines):
     agg_h = h.sum()
     hs = holes(board)
     bump = bumpiness(h)
-    # much stronger line reward + anti-hole
-    return (2.2 * lines) - (0.45 * agg_h) - (0.95 * hs) - (0.20 * bump)
+    # Dellacherie-inspired weights: height penalised most to keep the board low,
+    # which is the primary driver of survival and score maximisation.
+    return (0.761 * lines) - (0.511 * agg_h) - (0.357 * hs) - (0.184 * bump)
 
 def best_move(board, piece="T"):
     if piece not in PIECES:
