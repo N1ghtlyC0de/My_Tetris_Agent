@@ -2,6 +2,10 @@ from __future__ import annotations
 
 import numpy as np
 
+LINE_CLEAR_BONUS = [0.0, 1.0, 2.8, 5.0, 8.0]
+FUTURE_DISCOUNT_FACTOR = 0.35
+INVALID_FUTURE_PENALTY = -50.0
+
 # All tetrominoes with rotation states as (row, col) offsets
 PIECES = {
     "I": [
@@ -88,7 +92,10 @@ def score_board(board: np.ndarray, lines: int) -> float:
     # - prioritize line clears strongly
     # - heavily penalize holes
     # - keep stack low and smooth
-    line_bonus = [0.0, 1.0, 2.8, 5.0, 8.0][int(lines)]
+    # Non-linear reward for line clears: singles help, but doubles/triples/tetrises
+    # are rewarded increasingly more to encourage setup plays.
+    # `lines` is 0..4 for tetromino placement; clamp defensively for robustness.
+    line_bonus = LINE_CLEAR_BONUS[max(0, min(int(lines), 4))]
     return (
         2.2 * line_bonus
         - 0.36 * agg_h
@@ -133,7 +140,7 @@ def _best_move_single(board: np.ndarray, piece: str = "T"):
 
     shapes = PIECES[piece]
     best = None
-    best_score = -1e18
+    best_score = -float("inf")
 
     for rot_idx, shape in enumerate(shapes):
         min_dc = min(dc for _, dc in shape)
@@ -157,6 +164,14 @@ def _best_move_single(board: np.ndarray, piece: str = "T"):
 
 
 def best_move(board: np.ndarray, piece: str = "T", next_piece: str | None = None):
+    """
+    Return the best move for `piece` as (rotation_index, column, score).
+
+    If `next_piece` is provided and valid, applies a one-step lookahead:
+      score = immediate_score + FUTURE_DISCOUNT_FACTOR * best_future_score
+    where best_future_score is the best single-move score for `next_piece`
+    on the board after the current candidate move.
+    """
     # Keep original behavior when no lookahead piece is available
     if next_piece is None:
         return _best_move_single(board, piece)
@@ -167,7 +182,7 @@ def best_move(board: np.ndarray, piece: str = "T", next_piece: str | None = None
         return _best_move_single(board, piece)
 
     best = None
-    best_score = -1e18
+    best_score = -float("inf")
 
     for rot_idx, shape in enumerate(PIECES[piece]):
         min_dc = min(dc for _, dc in shape)
@@ -186,8 +201,8 @@ def best_move(board: np.ndarray, piece: str = "T", next_piece: str | None = None
             # One-step lookahead with discount:
             # still optimize current move, but prefer boards that give a better next move.
             future = _best_move_single(b2, next_piece)
-            future_score = future[2] if future is not None else -50.0
-            s = immediate_score + 0.35 * future_score
+            future_score = future[2] if future is not None else INVALID_FUTURE_PENALTY
+            s = immediate_score + FUTURE_DISCOUNT_FACTOR * future_score
 
             if s > best_score:
                 best_score = s

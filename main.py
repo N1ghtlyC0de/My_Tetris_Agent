@@ -156,7 +156,8 @@ def main() -> None:
         use_hold = decision["use_hold"]
 
         # 4) Plan best move for selected piece
-        mv = best_move(board_occ, piece=piece, next_piece=detected.get("next2"))
+        lookahead_piece = detected.get("next2")
+        mv = best_move(board_occ, piece=piece, next_piece=lookahead_piece)
 
         # If no legal move, fallback with T
         if mv is None and piece != "T":
