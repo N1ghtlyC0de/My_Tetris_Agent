@@ -120,7 +120,44 @@ def place(board: np.ndarray, shape, r: int, c: int):
     return b, lines
 
 
-def best_move(board: np.ndarray, piece: str = "T"):
+def _line_clear_bonus(lines: int, combo: int, b2b: int):
+    """
+    Lightweight heuristic inspired by common Tetris scoring:
+    - Reward back-to-back Tetrises.
+    - Keep combo momentum.
+    - Penalize losing b2b streaks.
+    """
+    extra_score = 0
+    new_combo = combo
+    new_b2b = b2b
+
+    if lines > 0:
+        new_combo = combo + 1
+        if lines >= 4:
+            # Strong bonus for multi-line clears, with extra weight for b2b streaks.
+            extra_score += (400 + 100 * (lines - 4)) + (200 if b2b else 0)
+            new_b2b = b2b + 1
+        else:
+            extra_score += 70 * lines
+            new_b2b = 0
+
+        # Combo momentum
+        if new_combo > 2:
+            extra_score += 20
+        if new_combo > 6:
+            extra_score += 20
+        if new_combo > 17:
+            extra_score += 30
+    else:
+        new_combo = 0
+        # Only penalize breaking a b2b streak when no lines are cleared.
+        if b2b > 0:
+            extra_score -= 500
+
+    return extra_score, new_combo, new_b2b
+
+
+def best_move(board: np.ndarray, piece: str = "T", *, next_piece: str | None = None, combo: int = 0, b2b: int = 0):
     # safe fallback if classifier returns unknown
     if piece not in PIECES:
         piece = "T"
@@ -141,10 +178,25 @@ def best_move(board: np.ndarray, piece: str = "T"):
             r = drop_row(board, shape, c)
             if r is None:
                 continue
-            b2, lines = place(board, shape, r, c)
-            s = score_board(b2, lines)
-            if s > best_score:
-                best_score = s
-                best = (rot_idx, c, s)
+            placed_board, lines = place(board, shape, r, c)
+            extra_score, new_combo, new_b2b = _line_clear_bonus(lines, combo, b2b)
+            move_score = score_board(placed_board, lines) + extra_score
+
+            # Optional one-piece lookahead to favor setups for the queue.
+            # This keeps depth at 1 to contain search cost.
+            if next_piece is not None:
+                future = best_move(
+                    placed_board,
+                    piece=next_piece,
+                    next_piece=None,
+                    combo=new_combo,
+                    b2b=new_b2b,
+                )
+                if future is not None:
+                    move_score += future[2]
+
+            if move_score > best_score:
+                best_score = move_score
+                best = (rot_idx, c, move_score)
 
     return best
