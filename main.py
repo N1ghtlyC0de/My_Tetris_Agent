@@ -44,13 +44,13 @@ def execute_move(
     target_rot: int,
     target_col: int,
     piece: str,
-    lock_with_hard_drop: bool = True,
+    lock_with_hard_drop: bool = False,
 ) -> None:
     """
     Execute the selected move:
       1) rotate
       2) horizontal move
-      3) hard drop
+      3) optional hard drop
     """
     # Rotate
     if target_rot == 1:
@@ -156,7 +156,7 @@ def main() -> None:
         use_hold = decision["use_hold"]
 
         # 4) Plan best move for selected piece
-        mv = best_move(board_occ, piece=piece)
+        mv = best_move(board_occ, piece=piece, next_piece=detected.get("next2"))
 
         # If no legal move, fallback with T
         if mv is None and piece != "T":
@@ -178,7 +178,7 @@ def main() -> None:
                 target_rot=target_rot,
                 target_col=target_col,
                 piece=piece,
-                lock_with_hard_drop=True,
+                lock_with_hard_drop=False,
             )
 
             # Optional debug
